@@ -1,45 +1,75 @@
+# this is the name that shows up in the GitHub Actions tab on the repo
 name: Lineage CI
 
+# when does this pipeline run?
+# - every time i push to main
+# - every time a pull request targets main
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
 
+# jobs are the actual stages of the pipeline
+# they run in the order i define using "needs:"
 jobs:
+
+  # STAGE 1 — check that my code is clean before running anything else
+  # this is the equivalent of checkstyle in my java/maven world
   quality:
     name: Lint & Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # github spins up a fresh ubuntu VM for this
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4        # pulls my repo code into the VM
+      - uses: actions/setup-python@v5    # installs python on the VM
         with:
           python-version: "3.11"
+
+      # ruff is a linter — it reads my python files and flags broken imports,
+      # undefined variables, bad syntax etc. basically catches dumb mistakes early
       - name: Install linting tools
         run: pip install ruff black
       - name: Run ruff linter
         run: ruff check lineage/ tests/
+
+      # black checks that my code is consistently formatted
+      # --check means it only reports problems, it doesn't fix them automatically
       - name: Check formatting with black
         run: black --check lineage/ tests/
 
+  # STAGE 2 — run unit tests on my python detection engine
+  # note: "needs: quality" means this only runs if stage 1 passed
+  # no point running tests on code that's already broken
+  #
+  # important: these tests have NO access to a real kernel or BCC
+  # they only test the pure python logic (engine.py, alerts.py)
+  # by simulating what a kernel event looks like as a python object
   test:
     name: Unit Tests (User-Space Engine)
     runs-on: ubuntu-latest
-    needs: quality
+    needs: quality  # blocks until stage 1 is green
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      # pytest is python's standard test runner
+      # it finds every file starting with test_ and runs every function starting with test_
+      # -v means verbose — shows me which tests passed and which failed
       - name: Install test dependencies
         run: pip install pytest
       - name: Run unit tests
         run: pytest tests/ -v
 
+  # STAGE 3 — scan my dependencies for known security vulnerabilities (CVEs)
+  # only runs if tests passed
+  # pip-audit checks the packages i use against a public vulnerability database
+  # since this is a security project it would be embarrassing to have vulnerable deps
   audit:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
-    needs: test
+    needs: test  # blocks until stage 2 is green
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
