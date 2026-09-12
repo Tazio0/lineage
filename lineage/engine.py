@@ -12,7 +12,18 @@ SHELLS = {"sh", "bash", "dash", "zsh", "fish", "csh", "ksh"}
 
 HIGH_RISK_PARENTS = {"nginx", "apache2", "httpd", "postgres", "mysqld", "sshd"}
 
-LEGITIMATE_PARENTS = {"gnome-terminal", "konsole", "xterm", "alacritty", "kitty", "bash", "zsh", "fish", "tmux", "screen"}
+LEGITIMATE_PARENTS = {
+    "gnome-terminal",
+    "konsole",
+    "xterm",
+    "alacritty",
+    "kitty",
+    "bash",
+    "zsh",
+    "fish",
+    "tmux",
+    "screen",
+}
 
 
 def classify_event(parent: str, child: str) -> dict:
