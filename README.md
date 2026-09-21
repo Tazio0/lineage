@@ -82,15 +82,17 @@ This requires:
 
 ```bash
 pytest tests/ -v
+# or: make test
 ```
 
 All tests run without BCC or kernel access. They simulate kernel events as plain Python data.
 
-## Lint
+## Lint & format
 
 ```bash
 ruff check lineage/ tests/
 black --check lineage/ tests/
+# or: make lint (check) / make format (auto-fix)
 ```
 
 ## Project structure
@@ -106,7 +108,10 @@ lineage/
 ├── tests/
 │   ├── test_engine.py    # unit tests for classification
 │   ├── test_alerts.py    # unit tests for alert formatting
+│   ├── test_detector.py  # unit tests for event decoding
 │   └── test_scenarios.py # acceptance tests (full pipeline simulation)
+├── Makefile           # developer task automation
+├── pyproject.toml     # tool configuration (ruff, black)
 └── requirements-dev.txt
 ```
 
